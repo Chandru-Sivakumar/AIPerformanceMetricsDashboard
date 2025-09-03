@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function(){
+    $('#predictionForm').submit(function(event){
+        event.preventDefault();
+        
+        $.ajax({
+            url: '/predict',
+            type: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                // Display textual predictions
+                $('#revenuePrediction').text('Predicted Revenue: ' + response.revenue_prediction);
+                $('#dashboardElement').text('Predicted Dashboard Element: ' + response.dashboard_element);
+                $('#matplotlibPlot').attr('src', response.matplotlib_plot);
+
+                // Parse and render the Plotly chart
+                let plotlyData = JSON.parse(response.plotly_data);
+                Plotly.react('plotlyChart', plotlyData.data, plotlyData.layout);
+            },
+            error: function() {
+                alert('Error making prediction.');
+            }
+        });
+    });
+});
+</script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e3f2fd;
+        }
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .top-section {
+            height: 30%;
+            background-color: #2196F3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .top-section h2 {
+            margin-bottom: 15px;
+        }
+        .bottom-section {
+            height: 70%;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .form-group {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        input {
+            padding: 10px;
+            width: 200px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .submit-btn {
+            width: 100%;
+            text-align: center;
+            margin-top: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e68900;
+        }
+        .results {
+            font-size: 18px;
+            margin-top: 20px;
+            color: #333;
+        }
+        .visualizations {
+            margin-top: 20px;
+        }
+        .visualizations img {
+            width: 600px;
+            height: auto;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-section">
+            <h2>Enter Inputs</h2>
+            <form id="predictionForm">
+                <div class="form-group">
+                    <input type="number" name="cpu_usage" placeholder="CPU Usage" required>
+                    <input type="number" name="memory_usage" placeholder="Memory Usage" required>
+                    <input type="number" name="disk_usage" placeholder="Disk Usage" required>
+                    <input type="number" name="response_time" placeholder="Response Time" required>
+                    <input type="number" name="error_rate" placeholder="Error Rate" required>
+                    <input type="number" name="active_users" placeholder="Active Users" required>
+                    <input type="number" name="new_users" placeholder="New Users" required>
+                    <input type="number" name="session_duration" placeholder="Session Duration" required>
+                    <input type="number" name="revenue" placeholder="Revenue" required>
+                    <input type="number" name="customer_retention_rate" placeholder="Customer Retention Rate" required>
+                    <input type="number" name="churn_rate" placeholder="Churn Rate" required>
+                    <input type="number" name="model_accuracy" placeholder="Model Accuracy" required>
+                    <input type="number" name="precision" placeholder="Precision" required>
+                    <input type="number" name="recall" placeholder="Recall" required>
+                    <input type="number" name="f1_score" placeholder="F1 Score" required>
+                    <input type="number" name="inference_time" placeholder="Inference Time" required>
+                    <input type="number" name="anomaly_detected" placeholder="Anomaly Detected" required>
+                    <input type="number" name="future_user_growth" placeholder="Future User Growth" required>
+                </div>
+                <div class="submit-btn">
+                    <button type="submit">Predict</button>
+                </div>
+            </form>
+        </div>
+        <div class="bottom-section">
+            <h2>Prediction Results</h2>
+            <p id="revenuePrediction" class="results"></p>
+            <p id="dashboardElement" class="results"></p>
+            <div class="visualizations">
+                <h3>Visualization Results</h3>
+                <div id="plotlyChart"></div>
+
+                <img id="matplotlibPlot" src="" alt="Matplotlib Visualization">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function(){
+            $('#predictionForm').submit(function(event){
+                event.preventDefault();
+                
+                $.ajax({
+                    url: '/predict',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#revenuePrediction').text('Predicted Revenue: ' + response.revenue_prediction);
+                        $('#dashboardElement').text('Predicted Dashboard Element: ' + response.dashboard_element);
+                        
+                        if (response.matplotlib_plot) {
+                            $('#matplotlibPlot').attr('src', response.matplotlib_plot);
+                        } else {
+                            $('#matplotlibPlot').attr('src', '').attr('alt', 'Matplotlib plot not available');
+                        }
+                        
+                        if (response.plotly_data && response.plotly_data.data) {
+                            Plotly.newPlot('plotlyChart', response.plotly_data.data, response.plotly_data.layout);
+                        } else {
+                            $('#plotlyChart').html('<p>Plotly chart data not available.</p>');
+                        }
+                    },
+                    error: function() {
+                        alert('Error making prediction. Please check your inputs and try again.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
